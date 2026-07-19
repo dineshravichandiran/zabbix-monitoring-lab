@@ -11,9 +11,11 @@
 
 This repo has a `.devcontainer` config with Docker-in-Docker preconfigured. Click **Code → Codespaces → Create codespace on main**, and it will automatically:
 1. Clone `zabbix/zabbix-docker`
-2. Run `docker compose up -d` to bring up server, web UI, and database
+2. Run `make up DB=pgsql` to bring up server, web UI, and database
 
-Once it's ready, open the forwarded port **8080** to reach the Zabbix frontend (`Admin` / `zabbix`). GitHub's free tier gives personal accounts 120 core-hours/month — stop or delete the codespace when you're done with a session to conserve that quota.
+Once it's ready, open the forwarded port **80** to reach the Zabbix frontend (`Admin` / `zabbix`). GitHub's free tier gives personal accounts 120 core-hours/month — stop or delete the codespace when you're done with a session to conserve that quota.
+
+> **Note:** zabbix-docker has moved to a `make`-based workflow (the old single `docker-compose_*.yaml` files are gone, replaced by `compose.yaml` + `compose_pgsql.yaml` combined via a Makefile). The commands below reflect the current repo. If upstream changes again, run `make help` inside `zabbix-docker` to see current targets.
 
 ---
 
@@ -22,15 +24,15 @@ Once it's ready, open the forwarded port **8080** to reach the Zabbix frontend (
 ```bash
 git clone https://github.com/zabbix/zabbix-docker.git
 cd zabbix-docker
-docker compose -f docker-compose_v3_alpine_pgsql_latest.yaml up -d
-# Frontend: http://localhost:8080   Login: Admin / zabbix
-docker compose ps                 # confirm server, db, web, agent up
+make up DB=pgsql
+# Frontend: http://localhost:80   Login: Admin / zabbix
+docker ps                         # confirm server, db, web are up
 docker compose logs -f zabbix-server | head -50
 ```
 
 Add a second agent to have something to monitor:
 ```bash
-docker run -d --name agent2 --network zabbix-docker_zbx_net_backend \
+docker run -d --name agent2 --network zabbix-docker_backend \
   -e ZBX_SERVER_HOST="zabbix-server" -e ZBX_HOSTNAME="lab-host-02" \
   zabbix/zabbix-agent2:alpine-latest
 ```
@@ -145,17 +147,17 @@ Add a Recovery operation. Fire the trigger, watch the escalation steps run.
 **Do:**
 ```bash
 # token
-curl -s -X POST http://localhost:8080/api_jsonrpc.php \
+curl -s -X POST http://localhost:80/api_jsonrpc.php \
  -H 'Content-Type: application/json-rpc' \
  -d '{"jsonrpc":"2.0","method":"user.login","params":{"username":"Admin","password":"zabbix"},"id":1}'
 
 # scope check FIRST (dry run)
-curl -s -X POST http://localhost:8080/api_jsonrpc.php \
+curl -s -X POST http://localhost:80/api_jsonrpc.php \
  -H 'Content-Type: application/json-rpc' \
  -d '{"jsonrpc":"2.0","method":"host.get","params":{"output":["hostid","host","status"]},"auth":"TOKEN","id":2}'
 
 # export backup
-curl -s -X POST http://localhost:8080/api_jsonrpc.php \
+curl -s -X POST http://localhost:80/api_jsonrpc.php \
  -H 'Content-Type: application/json-rpc' \
  -d '{"jsonrpc":"2.0","method":"configuration.export","params":{"options":{"hosts":["10084"]},"format":"yaml"},"auth":"TOKEN","id":3}'
 
@@ -173,7 +175,7 @@ curl -s -X POST http://localhost:8080/api_jsonrpc.php \
 ### 3.1 Add a proxy + kill it (60 min) ⭐⭐ **the standout**
 **Do:**
 ```bash
-docker run -d --name zbx-proxy --network zabbix-docker_zbx_net_backend \
+docker run -d --name zbx-proxy --network zabbix-docker_backend \
   -e ZBX_HOSTNAME="proxy-lab" -e ZBX_SERVER_HOST="zabbix-server" \
   -e ZBX_PROXYMODE="0" zabbix/zabbix-proxy-sqlite3:alpine-latest
 ```

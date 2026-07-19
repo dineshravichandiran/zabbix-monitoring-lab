@@ -9,13 +9,13 @@
       "version": "latest"
     }
   },
-  "forwardPorts": [8080, 10051],
+  "forwardPorts": [80, 10051],
   "portsAttributes": {
-    "8080": {
+    "80": {
       "label": "Zabbix Web UI",
       "onAutoForward": "openPreview"
     }
   },
   "postCreateCommand": "test -d zabbix-docker || git clone --depth 1 https://github.com/zabbix/zabbix-docker.git",
-  "postStartCommand": "cd zabbix-docker && docker compose -f docker-compose_v3_alpine_pgsql_latest.yaml up -d"
+  "postStartCommand": "cd zabbix-docker && make up DB=pgsql"
 }
