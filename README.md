@@ -7,7 +7,17 @@
 
 ---
 
-## SETUP (20 min)
+## Run in GitHub Codespaces (no local Docker required)
+
+This repo has a `.devcontainer` config with Docker-in-Docker preconfigured. Click **Code → Codespaces → Create codespace on main**, and it will automatically:
+1. Clone `zabbix/zabbix-docker`
+2. Run `docker compose up -d` to bring up server, web UI, and database
+
+Once it's ready, open the forwarded port **8080** to reach the Zabbix frontend (`Admin` / `zabbix`). GitHub's free tier gives personal accounts 120 core-hours/month — stop or delete the codespace when you're done with a session to conserve that quota.
+
+---
+
+## SETUP (20 min, local machine)
 
 ```bash
 git clone https://github.com/zabbix/zabbix-docker.git
