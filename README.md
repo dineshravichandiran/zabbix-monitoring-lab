@@ -40,6 +40,8 @@ docker run -d --name agent2 --network zabbix-docker_backend \
 ### Host + template linking — ✅ Done
 Linked a host (`lab-host-02`) to the **Linux by Zabbix agent** template rather than building items by hand — config should be inherited, not hand-crafted, so it stays consistent across an estate. Confirmed items were actually supported and fresh in Latest Data; a host that exists but isn't collecting is a blind spot.
 
+![Zabbix Latest Data showing lab-host-02 with 73 live items across memory, CPU, and security tags](screenshots/zabbix-latest-data.png)
+
 ### Breaking an unsupported item, on purpose — 📋 Planned
 ```bash
 docker exec -it zabbix-server zabbix_get -s agent2 -k system.cpu.utilXXX   # fails
@@ -55,6 +57,8 @@ Out of the box, "Mounted filesystem discovery" picks up `/proc`, `/sys`, overlay
 ```
 **Verified result:** before the filter, discovery had already picked up 22 filesystem-related items. After forcing a re-discovery ("Execute now"), the Latest Data subfilter showed only `fstype: ext4 (21)` — no tmpfs, overlay, proc, or sysfs entries survived. That's the actual before/after evidence the filter works, not just that it's saved. The fix is filtering on `{#FSTYPE}`/`{#FSNAME}` plus the lifetime setting for lost resources — not disabling discovery, and not stretching the interval to hide the churn.
 
+![Zabbix Mounted filesystem discovery rule with FSNAME and FSTYPE LLD filters configured](screenshots/zabbix-lld-filter.png)
+
 ### Dependent items + JSONPath preprocessing — 📋 Planned
 **Plan:** build a master **HTTP agent** item polling a JSON endpoint (`https://api.github.com/repos/zabbix/zabbix`), then create dependent items extracting fields with JSONPath (`$.stargazers_count`, `$.open_issues_count`) — one poll feeding several metrics instead of one poll per metric.
 
@@ -68,6 +72,9 @@ Out of the box, "Mounted filesystem discovery" picks up `/proc`, `/sys`, overlay
 ### Threshold trigger — ✅ Done · nodata trigger — 📋 Planned
 Created a threshold trigger (`last(/lab-host-02/system.cpu.util)>20`, Warning severity) and verified it's enabled and evaluating live data. Not yet done: a companion freshness trigger (`nodata(/lab-host-02/agent.ping,5m)=1`) stopping the agent container to confirm it actually fires — that's the one that's easy to forget, since if the agent dies, a CPU threshold trigger just goes quiet and everything looks fine. Silence and health look identical without it.
 
+![Zabbix trigger list showing the CPU threshold trigger enabled and live, alongside a template-provided trigger](screenshots/zabbix-trigger-dependency.png)
+*The second trigger's "Depends on" relationship comes bundled with the linked template, not from the trigger-dependency exercise above — that one's still planned.*
+
 ### Hysteresis (separate recovery expression) — 📋 Planned
 **Plan:** set problem expression `min(/lab-host-02/system.cpu.util,3m)>20` and recovery expression `max(/lab-host-02/system.cpu.util,3m)<10`, then generate borderline load. If problem and recovery use the same threshold, a metric sitting on the line flaps and re-pages repeatedly.
 
@@ -78,6 +85,8 @@ Created a threshold trigger (`last(/lab-host-02/system.cpu.util)>20`, Warning se
 Built an action ("Severity escalation - Lab") with staged operations — Warning+ severity routes to Zabbix administrators immediately, escalates again after a delay, with a recovery operation so the closure notification reaches the same people.
 
 > **Bug caught while testing this:** step 2 was meant to fire 60 seconds after step 1, but it actually fired an hour later. Cause: step 1's duration was left as "Default," which falls back to the *action's* top-level "Default operation step duration" field (set to 1h) — not the step's own interval. Timing is controlled by two settings, not one, and it's easy to set them so they silently contradict each other. Caught by checking the actual computed "Start in" time in the operations table, not by assuming the config was right because it saved without error.
+
+![Zabbix trigger action showing staged escalation operations and the 1h default step duration that caused the timing bug](screenshots/zabbix-escalation-action.png)
 
 ### Maintenance windows — 📋 Planned
 **Plan:** test **with data collection** (suppresses notifications, keeps history) against **without data collection** (stops collection entirely, leaving a real gap in history) — and default to "with," scoped tightly, with an end time always set.
