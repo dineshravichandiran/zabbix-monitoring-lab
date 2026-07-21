@@ -155,6 +155,23 @@ Deploy a proxy, move a host to it, then deliberately take it offline and watch `
 
 ---
 
+## SLI / SLO example — 📋 Planned
+
+This lab doesn't carry real user traffic, so there's no genuine user-facing SLA to report against — but the trigger and escalation work above maps directly onto how I'd define and enforce an SLO in production, and it's worth spelling out explicitly rather than leaving it implicit.
+
+**Indicator (SLI):** agent availability — the percentage of `agent.ping` checks that succeed per host, per rolling window.
+
+**Objective (SLO):** 99.9% of `agent.ping` checks succeed over a rolling 30-day window — the same uptime figure I already carry in production (≈ 43 minutes of allowed downtime/month).
+
+**Error budget policy:**
+- Budget remaining > 50% — ship changes normally.
+- Budget remaining 10–50% — require a second reviewer on infra changes; raise alert sensitivity.
+- Budget exhausted — freeze non-critical changes; only risk-reducing merges (rollback, hardening, monitoring fixes) go out until the window resets.
+
+**Plan:** the escalation action already built (✅ above) fires on sustained unavailability, which is the same signal a burn-rate alert would watch — but it's a single fixed threshold, not a burn-rate calculation. Next step is a dedicated trigger using Zabbix's `nodata()`/`trendavg()` across two windows (fast burn: 1h, slow burn: 6h) — the standard multi-window burn-rate pattern — instead of one flat threshold, so a genuine SLO calculation drives the page, not just "is it down right now."
+
+---
+
 ## Where this leaves me
 
 Two layers of Zabbix experience: **in production at PTC**, I own the alert lifecycle — building and validating monitoring for Fortune 500 customer go-lives, tuning triggers, managing alert quality, and troubleshooting the collection pipeline (unsupported items, agent/SNMP issues, Linux-level checks) across 200+ servers and 50+ enterprise environments.
