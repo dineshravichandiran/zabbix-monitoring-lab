@@ -7,6 +7,11 @@ Each section below documents a specific capability: what's been set up, the exac
 
 > **Bootstrap note:** the base host registration, one LLD filter, one trigger, and one escalation action (all marked ✅ below) were configured via the Zabbix API as a starting point rather than clicked through the UI from scratch. That's a shortcut for standing up the lab, not a substitute for being able to do it live — treat the ✅ sections as "verified working," not as UI muscle memory yet.
 
+This README documents what's built here specifically. For the practical,
+day-to-day "how do you actually work with Zabbix" side — onboarding at
+scale, alert tuning, troubleshooting unsupported items, proxy scaling — see
+**[OPERATING-ZABBIX.md](OPERATING-ZABBIX.md)**.
+
 ---
 
 ## Run it yourself
