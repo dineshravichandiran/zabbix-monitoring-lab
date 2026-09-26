@@ -1,7 +1,7 @@
 # Zabbix Monitoring Lab — Platform Deep-Dive
 **Dinesh Ravichandiran**
 
-Production work at PTC covers alert tuning, triage, and the day-to-day operational side of Zabbix across 50+ Fortune 500 environments. This self-hosted lab (Docker) exists to go deeper into the platform-engineering side I don't touch daily: discovery rules, preprocessing, escalation logic, RBAC, the API, and proxy architecture. Terraform-based provisioning is the next iteration I'm building toward, extending the same repeatable, version-controlled approach to monitoring-as-code.
+Production work covers alert tuning, triage, and the day-to-day operational side of Zabbix across 50+ Fortune 500 environments. This self-hosted lab (Docker) exists to go deeper into the platform-engineering side I don't touch daily: discovery rules, preprocessing, escalation logic, RBAC, the API, and proxy architecture. Terraform-based provisioning is the next iteration I'm building toward, extending the same repeatable, version-controlled approach to monitoring-as-code.
 
 Each section below documents a specific capability: what's been set up, the exact steps, and what it taught me. **Status tags are literal** — ✅ Done means it was actually clicked through and verified in this environment; 📋 Planned means it's in the guide but not yet completed here. Nothing below claims to be finished unless it is.
 
@@ -179,7 +179,7 @@ This lab doesn't carry real user traffic, so there's no genuine user-facing SLA 
 
 ## Where this leaves me
 
-Two layers of Zabbix experience: **in production at PTC**, I own the alert lifecycle — building and validating monitoring for Fortune 500 customer go-lives, tuning triggers, managing alert quality, and troubleshooting the collection pipeline (unsupported items, agent/SNMP issues, Linux-level checks) across 200+ servers and 50+ enterprise environments.
+Two layers of Zabbix experience: **in production**, I own the alert lifecycle — building and validating monitoring for Fortune 500 customer go-lives, tuning triggers, managing alert quality, and troubleshooting the collection pipeline (unsupported items, agent/SNMP issues, Linux-level checks) across 200+ servers and 50+ enterprise environments.
 
 **Beyond that**, this lab is where I'm building the platform-level skills production doesn't ask of me. So far that's a host/template link, an LLD filter I verified actually reduces discovered noise, a trigger, and an escalation action (where I caught and fixed a real timing misconfiguration). Still ahead in this lab: dependent items with JSONPath preprocessing, trigger dependencies and hysteresis, secret macros, least-privilege RBAC, a full API dry-run/rollback cycle, proxy buffering behavior, retention tuning, and webhook idempotency.
 
